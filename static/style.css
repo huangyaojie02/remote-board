@@ -1,0 +1,11 @@
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; }
+body.screen { background: #fff; color: #000; }
+body.screen #board {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 4vh 6vw; 
+  font-size: 8vw; line-height: 1.3; word-break: break-word; text-align: center;
+}
+body.send { padding: 16px; }
+.send textarea { width: 100%; font-size: 18px; padding: 12px; box-sizing: border-box; }
+.send button { margin-top: 10px; font-size: 18px; padding: 10px 16px; }
+.send #hint { margin-top: 10px; color: #0a7; }

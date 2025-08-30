@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>远程留言 - 发送端</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="send">
+  <h1>远程留言（发送端）</h1>
+  <textarea id="msg" rows="6" placeholder="输入要显示给外公的文字..."></textarea>
+  <button id="sendBtn">发送</button>
+  <p id="hint"></p>
+
+  <script>
+    // 从 URL 里取 token（/send?t=xxxx）
+    const url = new URL(location.href);
+    const TOKEN = url.searchParams.get("t") || "";
+    const socket = io(location.origin + "/send", { transports: ["websocket"] });
+
+    const msgEl = document.getElementById("msg");
+    const btn = document.getElementById("sendBtn");
+    const hint = document.getElementById("hint");
+
+    btn.onclick = () => {
+      const text = msgEl.value.trim();
+      socket.emit("push", { token: TOKEN, text });
+    };
+
+    socket.on("result", (data) => {
+      hint.textContent = data.msg || "";
+      if (data.ok) {
+        // 可选：成功后清空输入框
+        // msgEl.value = "";
+      }
+    });
+  </script>
+</body>
+</html>

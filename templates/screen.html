@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>远程留言 - 显示端</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="screen">
+  <div id="board"></div>
+
+  <script>
+    const board = document.getElementById("board");
+    const socket = io(location.origin + "/screen", { transports: ["websocket"] });
+
+    function render(text) {
+      board.textContent = text || "";
+    }
+
+    socket.on("update", (data) => {
+      render((data && data.text) || "");
+    });
+
+    // socket.io 自动断线重连
+  </script>
+</body>
+</html>
