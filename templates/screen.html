@@ -4,25 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>远程留言 - 显示端</title>
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    body { margin:0; background:#111; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; }
+    #board { font-size:8vw; text-align:center; word-break:break-word; }
+    #status { position:fixed; bottom:10px; left:10px; font-size:14px; color:#888; }
+  </style>
 </head>
 <body class="screen">
-  <div id="board"></div>
+  <div id="board">你好外公 🌞</div>
+  <div id="status">状态：等待连接…</div>
 
+  <!-- ⚠️ 同样使用后端自带 socket.io 脚本 -->
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const board = document.getElementById("board");
-    const socket = io(location.origin + "/screen", { transports: ["websocket"] });
+    const boardEl  = document.getElementById("board");
+    const statusEl = document.getElementById("status");
 
-    function render(text) {
-      board.textContent = text || "";
-    }
+    function show(s){ statusEl.textContent = "状态：" + s; }
 
-    socket.on("update", (data) => {
-      render((data && data.text) || "");
+    // 连接 /screen 命名空间
+    const socket = io("/screen", { transports: ["websocket"] });
+
+    socket.on("connect",       () => show("已连接 /screen (id=" + socket.id + ")"));
+    socket.on("connect_error", e  => show("连接失败：" + e.message));
+    socket.on("disconnect",    r  => show("断开：" + r));
+
+    // 接收后端广播的 update 消息
+    socket.on("update", data => {
+      const text = (data && data.text) ? data.text : "";
+      boardEl.textContent = text || "（暂无内容）";
+      show("已更新");
     });
-
-    // socket.io 自动断线重连
   </script>
 </body>
 </html>
