@@ -1,29 +1,35 @@
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script>
-  const board = document.getElementById("board");
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>远程留言 - 显示端</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { display: flex; align-items: center; justify-content: center; background: #fff; }
+    #board { font-size: 10vw; line-height: 1.2; text-align: center; word-break: break-word; padding: 4vw; }
+    #status { position: fixed; left: 12px; bottom: 10px; color: #888; font-size: 14px; }
+  </style>
+</head>
+<body class="screen">
+  <div id="board">你好外公 🌞</div>
+  <div id="status">状态：等待连接...</div>
 
-  const socket = io("/screen", {
-    path: "/socket.io",
-    transports: ["websocket", "polling"],
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000
-  });
+  <script>
+    const board = document.getElementById("board");
+    const statusEl = document.getElementById("status");
 
-  function render(text) {
-    board.textContent = text || "";
-  }
+    // 连接到 /screen namespace
+    const socket = io(location.origin + "/screen", { transports: ["websocket"] });
 
-  socket.on("connect", () => {
-    // 连接成功后，服务器会立刻 emit("update", last_message)
-    console.log("screen connected");
-  });
+    socket.on("connect", () => { statusEl.textContent = "状态：已连接"; });
+    socket.on("disconnect", () => { statusEl.textContent = "状态：已断开"; });
 
-  socket.on("update", (data) => {
-    render((data && data.text) || "");
-  });
-
-  socket.on("connect_error", (e) => {
-    console.log("screen connect_error:", e.message);
-  });
-</script>
+    // 收到新消息就更新
+    socket.on("update", (data) => {
+      board.textContent = (data && data.text) ? data.text : "";
+    });
+  </script>
+</body>
+</html>
