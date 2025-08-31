@@ -1,38 +1,71 @@
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script>
-  // 1) 从 URL 里取 token（/send?t=xxxx）
-  const url = new URL(location.href);
-  const TOKEN = url.searchParams.get("t") || "";
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>远程留言 - 发送端</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 16px; }
+    h1 { font-size: 28px; }
+    textarea { width: 100%; height: 300px; font-size: 24px; padding: 12px; }
+    button { font-size: 20px; padding: 10px 18px; margin-top: 12px; }
+    #hint { margin-top: 10px; color: #0b8; font-size: 16px; }
+    #status { margin-top: 14px; color: #666; font-size: 14px; }
+  </style>
+</head>
+<body class="send">
+  <h1>远程留言（发送端）</h1>
 
-  // 2) 更“稳”的连接配置：允许 websocket + polling，并指定默认 path
-  const socket = io("/send", {
-    path: "/socket.io",
-    transports: ["websocket", "polling"],
-    withCredentials: false,
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000
-  });
+  <textarea id="msg" placeholder="输入要显示给外公的文字..."></textarea>
+  <br />
+  <button id="sendBtn" disabled>发送</button>
 
-  const msgEl = document.getElementById("msg");
-  const btn = document.getElementById("sendBtn");
-  const hint = document.getElementById("hint");
+  <div id="hint"></div>
+  <div id="status">状态：等待连接...</div>
 
-  // 连接状态提示
-  socket.on("connect", () => (hint.textContent = "状态：已连接"));
-  socket.on("connect_error", (e) => (hint.textContent = "连接错误：" + e.message));
-  socket.on("reconnect_attempt", () => (hint.textContent = "正在重连..."));
+  <script>
+    // 1) 从 URL 里取 token：/send?t=xxxx
+    const url = new URL(location.href);
+    const TOKEN = url.searchParams.get("t") || "";
 
-  // 发送
-  btn.onclick = () => {
-    const text = (msgEl.value || "").trim();
-    socket.emit("push", { token: TOKEN, text });
-  };
+    // 2) 连接发送端 namespace
+    const socket = io(location.origin + "/send", { transports: ["websocket"] });
 
-  // 结果反馈
-  socket.on("result", (data) => {
-    hint.textContent = data && data.msg ? data.msg : "";
-    // 可选：成功后清空
-    // if (data.ok) msgEl.value = "";
-  });
-</script>
+    const msgEl = document.getElementById("msg");
+    const btn = document.getElementById("sendBtn");
+    const hint = document.getElementById("hint");
+    const statusEl = document.getElementById("status");
+
+    // 连接状态
+    socket.on("connect", () => {
+      statusEl.textContent = "状态：已连接";
+      btn.disabled = false;
+    });
+    socket.on("disconnect", () => {
+      statusEl.textContent = "状态：已断开";
+      btn.disabled = true;
+    });
+
+    // 发送按钮
+    btn.onclick = () => {
+      const text = msgEl.value.trim();
+      socket.emit("push", { token: TOKEN, text });
+    };
+
+    // 后端返回结果
+    socket.on("result", (data) => {
+      hint.textContent = data && data.msg ? data.msg : "";
+      if (data && data.ok) {
+        // 可按需清空输入框
+        // msgEl.value = "";
+      }
+    });
+
+    // 可选：收到“已连接”状态
+    socket.on("status", (data) => {
+      if (data && data.msg) statusEl.textContent = "状态：" + data.msg;
+    });
+  </script>
+</body>
+</html>
