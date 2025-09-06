@@ -16,7 +16,7 @@ app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET", "dev-secret")
 socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
 # 保存“最近一条消息”（供新连接的屏幕端立即显示）
-last_message = {"text": "你好外公 🌞"}
+last_message = {"text": "您好公公 🌞"}
 
 @app.route("/")
 def index():
